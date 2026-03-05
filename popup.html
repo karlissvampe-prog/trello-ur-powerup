@@ -8,29 +8,24 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #1a1a2e; padding: 16px; }
-
     .search-row { display: flex; gap: 8px; margin-bottom: 6px; }
     input[type="text"] { flex: 1; padding: 9px 13px; border: 2px solid #dde3ea; border-radius: 8px; font-size: 14px; background: #fff; color: #1a1a2e; transition: border-color 0.2s; outline: none; }
     input[type="text"]:focus { border-color: #0052cc; }
     input[type="text"]::placeholder { color: #aaa; }
-
     .toggle-row { display: flex; gap: 6px; margin-bottom: 14px; }
     .toggle-btn { padding: 4px 12px; border: 1.5px solid #dde3ea; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; background: #fff; color: #6b7280; transition: all 0.15s; }
     .toggle-btn.active { background: #0052cc; border-color: #0052cc; color: #fff; }
-
     button#btn-search { padding: 9px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #0052cc; color: #fff; white-space: nowrap; }
     button#btn-search:hover { background: #0041a3; }
     button#btn-search:disabled { background: #b0c4e8; cursor: not-allowed; }
-
-    /* Rezultātu saraksts (nosaukuma meklēšanai) */
+    #btn-copy { width: 100%; margin-top: 12px; padding: 11px; background: #0052cc; color: #fff; font-size: 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: none; }
+    #btn-copy:hover { background: #0041a3; }
     .results-list { display: none; border: 1px solid #e0e6ed; border-radius: 10px; overflow: hidden; margin-bottom: 4px; }
     .result-item { padding: 9px 14px; border-bottom: 1px solid #f0f3f6; cursor: pointer; transition: background 0.1s; }
     .result-item:last-child { border-bottom: none; }
     .result-item:hover { background: #eff6ff; }
     .result-item-name { font-size: 13px; font-weight: 600; color: #1a1a2e; }
     .result-item-sub  { font-size: 11px; color: #6b7280; margin-top: 2px; }
-
-    /* Detaļu karte */
     .result-card { background: #fff; border: 1px solid #e0e6ed; border-radius: 10px; overflow: hidden; display: none; }
     .result-header { background: #0052cc; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .btn-back { background: rgba(255,255,255,0.2); border: none; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
@@ -40,22 +35,12 @@
     .field-label { color: #6b7280; min-width: 110px; font-size: 12px; flex-shrink: 0; padding-top: 1px; }
     .field-value { color: #1a1a2e; font-weight: 500; word-break: break-word; }
     .field-value.missing { color: #9ca3af; font-style: italic; font-weight: 400; }
-
-    .action-row { display: flex; gap: 8px; margin-top: 12px; }
-    .action-row button { flex: 1; padding: 11px; font-size: 13px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: none; }
-    #btn-add  { background: #00875a; color: #fff; }
-    #btn-add:hover  { background: #006644; }
-    #btn-copy { background: #0052cc; color: #fff; }
-    #btn-copy:hover { background: #0041a3; }
-    #btn-add:disabled, #btn-copy:disabled { opacity: 0.5; cursor: not-allowed; }
-
     #error-msg { display: none; background: #fff0f0; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #b91c1c; }
     #loading { display: none; text-align: center; padding: 20px; color: #6b7280; font-size: 13px; }
     .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #e5e7eb; border-top-color: #0052cc; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     #notice { display: none; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 10px; }
     #notice.success { background: #f0fdf4; border: 1px solid #6ee7b7; color: #065f46; }
-    #notice.info    { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
     #auto-hint { font-size: 11px; color: #6b7280; margin-bottom: 10px; display: none; }
     #auto-hint span { background: #dbeafe; color: #1e40af; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
   </style>
@@ -76,10 +61,8 @@
 <div id="loading"><span class="spinner"></span>Meklē…</div>
 <div id="error-msg"></div>
 
-<!-- Saraksts nosaukuma meklēšanai -->
 <div class="results-list" id="results-list"></div>
 
-<!-- Detaļu karte -->
 <div class="result-card" id="result-card">
   <div class="result-header">
     <button class="btn-back" id="btn-back" onclick="backToList()" style="display:none">← Atpakaļ</button>
@@ -91,17 +74,14 @@
   </div>
 </div>
 
-<div class="action-row">
-  <button id="btn-copy" onclick="copyToClipboard()">📋 Kopēt</button>
-  <button id="btn-add"  onclick="addToCard()">➕ Pievienot komentārā</button>
-</div>
+<button id="btn-copy" onclick="copyToClipboard()">📋 Kopēt rekvizītus</button>
 <div id="notice"></div>
 
 <script>
   var t = TrelloPowerUp.iframe();
   var currentData = null;
   var lastResults = [];
-  var searchMode = 'reg'; // 'reg' vai 'name'
+  var searchMode = 'reg';
   var PROXY = 'https://trello-ur-pull.karlissvampe.workers.dev/';
   var REG_FIELD_NAME = 'Reģistrācijas Nr.';
 
@@ -113,9 +93,7 @@
     searchMode = mode;
     document.getElementById('mode-reg').className  = 'toggle-btn' + (mode === 'reg'  ? ' active' : '');
     document.getElementById('mode-name').className = 'toggle-btn' + (mode === 'name' ? ' active' : '');
-    document.getElementById('reg-input').placeholder = mode === 'reg'
-      ? 'Reģistrācijas numurs…'
-      : 'Uzņēmuma nosaukums…';
+    document.getElementById('reg-input').placeholder = mode === 'reg' ? 'Reģistrācijas numurs…' : 'Uzņēmuma nosaukums…';
     document.getElementById('reg-input').value = '';
     hideAll();
     t.sizeTo(document.body);
@@ -123,12 +101,10 @@
 
   function hideAll() {
     hide('result-card'); hide('error-msg'); hide('results-list'); hide('notice');
-    document.getElementById('btn-copy').style.display = 'none';
-    document.getElementById('btn-add').style.display  = 'none';
+    hide('btn-copy');
     document.getElementById('btn-back').style.display = 'none';
   }
 
-  // Auto-load reģ. nr. no custom field
   window.addEventListener('load', function() {
     t.card('customFieldItems').then(function(card) {
       var items = card.customFieldItems || [];
@@ -157,7 +133,7 @@
   }
   function showNotice(msg, type) {
     var el = document.getElementById('notice');
-    el.textContent = msg; el.className = type;
+    el.textContent = msg; el.className = type || 'success';
     show('notice'); t.sizeTo(document.body);
   }
   function buildText(info) {
@@ -170,24 +146,19 @@
     hideAll();
     show('loading');
     document.getElementById('btn-search').disabled = true;
-
     try {
       var url = searchMode === 'reg'
         ? PROXY + '?reg='  + encodeURIComponent(query)
         : PROXY + '?name=' + encodeURIComponent(query);
-
       var resp = await fetch(url);
       if (!resp.ok) throw new Error('Servera kļūda (' + resp.status + ').');
       var json = await resp.json();
       if (!json.success) throw new Error('API atbildes kļūda.');
       var records = json.result && json.result.records;
-      if (!records || records.length === 0) throw new Error('Nekas nav atrasts. Mēģini citu meklēšanas vārdu.');
-
+      if (!records || records.length === 0) throw new Error('Nekas nav atrasts.');
       if (searchMode === 'reg' || records.length === 1) {
-        // Tieši uz detaļu karti
         showDetail(records[0], false);
       } else {
-        // Rāda sarakstu
         showList(records);
       }
     } catch (err) {
@@ -204,12 +175,11 @@
     lastResults = records;
     var list = document.getElementById('results-list');
     list.innerHTML = '';
-    records.forEach(function(r, i) {
+    records.forEach(function(r) {
       var div = document.createElement('div');
       div.className = 'result-item';
-      div.innerHTML =
-        '<div class="result-item-name">' + (r.name || '—') + '</div>' +
-        '<div class="result-item-sub">Reģ. nr.: ' + (r.regcode || '—') + ' · ' + (r.address || '—').substring(0, 50) + '</div>';
+      div.innerHTML = '<div class="result-item-name">' + (r.name || '—') + '</div>' +
+        '<div class="result-item-sub">Reģ. nr.: ' + (r.regcode || '—') + ' · ' + (r.address || '').substring(0, 50) + '</div>';
       div.onclick = function() { showDetail(r, true); };
       list.appendChild(div);
     });
@@ -225,15 +195,12 @@
     hide('results-list');
     show('result-card');
     document.getElementById('btn-back').style.display = showBack ? 'block' : 'none';
-    show('btn-copy', 'flex');
-    show('btn-add',  'flex');
+    show('btn-copy', 'block');
     t.sizeTo(document.body);
   }
 
   function backToList() {
-    hide('result-card');
-    document.getElementById('btn-copy').style.display = 'none';
-    document.getElementById('btn-add').style.display  = 'none';
+    hide('result-card'); hide('btn-copy');
     showList(lastResults);
   }
 
@@ -242,7 +209,7 @@
     var text = buildText(currentData);
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text)
-        .then(function() { showNotice('✅ Nokopēts starpliktuvē!', 'success'); })
+        .then(function() { showNotice('✅ Nokopēts starpliktuvē!'); })
         .catch(function() { fallbackCopy(text); });
     } else { fallbackCopy(text); }
   }
@@ -253,31 +220,9 @@
     ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
     document.body.appendChild(ta);
     ta.focus(); ta.select();
-    try { document.execCommand('copy'); showNotice('✅ Nokopēts starpliktuvē!', 'success'); }
-    catch(e) { showNotice('⚠️ Kopēšana neizdevās.', 'info'); }
+    try { document.execCommand('copy'); showNotice('✅ Nokopēts starpliktuvē!'); }
+    catch(e) { showNotice('⚠️ Kopēšana neizdevās.'); }
     document.body.removeChild(ta);
-  }
-
-  async function addToCard() {
-    if (!currentData) return;
-    document.getElementById('btn-add').disabled = true;
-    var comment = buildText(currentData);
-    try {
-      var restApi = t.getRestApi();
-      var token = await restApi.getToken({ scope: { write: true }, expiration: 'never' });
-      var card = await t.card('id');
-      var r = await fetch(
-        'https://api.trello.com/1/cards/' + card.id + '/actions/comments?key=&token=' + token,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: comment }) }
-      );
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      showNotice('✅ Rekvizīti pievienoti kartītei!', 'success');
-      hide('btn-add');
-    } catch(err) {
-      showNotice('⚠️ Nevarēja pievienot komentāru. Izmanto "Kopēt".', 'info');
-    } finally {
-      document.getElementById('btn-add').disabled = false;
-    }
   }
 </script>
 </body>
