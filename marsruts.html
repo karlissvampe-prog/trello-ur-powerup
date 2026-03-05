@@ -75,7 +75,7 @@
   <div class="divider"></div>
 
   <div class="field-row">
-    <span class="field-label">📝 Papildus info</span>
+    <span class="field-label">ℹ️ Papildus info</span>
     <span class="field-value notes" id="f-notes"></span>
   </div>
 </div>
@@ -202,8 +202,8 @@
         '👥 Pasažieri: '        + (vals[FIELD_MAP.pax]    || 'Nav norādīts') + '\n' +
         '─────────────────────\n' +
         '📞 Kontaktpersona: '   + (vals[FIELD_MAP.phone]  || 'Nav norādīts') + '\n' +
-        '🏢 Klients: '          + (vals[FIELD_MAP.client] || 'Nav norādīts') + '\n' +
-        (addr.notes ? '─────────────────────\n📝 Papildus info: ' + addr.notes : '');
+        '🏢 Klients: '          + (vals[FIELD_MAP.client] || 'Nav norādīts') +
+        (addr.notes ? '\n\nℹ️ Papildus informācija: ' + addr.notes : '');
 
       hide('loading');
       show('sheet');
