@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+  <meta charset="utf-8">
+  <title>UR Rekvizīti – Power-Up</title>
+</head>
+<body>
+<script src="https://p.trellocdn.com/power-up.min.js"></script>
+<script>
+  var BASE_URL = window.location.origin + window.location.pathname.replace('index.html','');
+
+  TrelloPowerUp.initialize({
+    'card-buttons': function(t) {
+      return [{
+        icon: BASE_URL + 'icon.svg',
+        text: 'Rekvizīti',
+        callback: function(t) {
+          return t.popup({
+            title: '🏢 Uzņēmuma Rekvizīti',
+            url: BASE_URL + 'popup.html',
+            height: 380
+          });
+        }
+      }];
+    }
+  });
+</script>
+</body>
+</html>
