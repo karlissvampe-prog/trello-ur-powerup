@@ -237,8 +237,8 @@
     document.getElementById('btn-search').disabled = true;
 
     try {
-      // Uzņēmumu Reģistra publiskais API
-      var url = 'https://ur.gov.lv/api/v1/company/' + encodeURIComponent(regNr);
+      // Cloudflare proxy → UR API (CORS risinājums)
+      var url = 'https://trello-ur-pull.karlissvampe.workers.dev/?reg=' + encodeURIComponent(regNr);
       var resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
 
       if (resp.status === 404) throw new Error('Uzņēmums nav atrasts. Pārbaudi reģistrācijas numuru.');
@@ -251,7 +251,7 @@
     } catch (err) {
       var msg = err.message;
       if (err instanceof TypeError) {
-        msg = 'Nevar savienoties ar UR API. Iespējams CORS ierobežojums — skatīt README.';
+        msg = 'Nevar savienoties ar proxy. Pārbaudi vai workers.dev ir aktīvs.';
       }
       document.getElementById('error-msg').textContent = '❌ ' + msg;
       show('error-msg');
