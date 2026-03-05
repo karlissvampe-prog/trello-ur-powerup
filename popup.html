@@ -8,28 +8,47 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #1a1a2e; padding: 16px; }
-    .search-row { display: flex; gap: 8px; margin-bottom: 16px; }
+
+    .search-row { display: flex; gap: 8px; margin-bottom: 6px; }
     input[type="text"] { flex: 1; padding: 9px 13px; border: 2px solid #dde3ea; border-radius: 8px; font-size: 14px; background: #fff; color: #1a1a2e; transition: border-color 0.2s; outline: none; }
     input[type="text"]:focus { border-color: #0052cc; }
     input[type="text"]::placeholder { color: #aaa; }
-    button { padding: 9px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    #btn-search { background: #0052cc; color: #fff; }
-    #btn-search:hover { background: #0041a3; }
-    #btn-search:disabled { background: #b0c4e8; cursor: not-allowed; }
-    .action-row { display: flex; gap: 8px; margin-top: 12px; }
-    .action-row button { flex: 1; padding: 11px; font-size: 13px; border-radius: 8px; display: none; }
-    #btn-add  { background: #00875a; color: #fff; }
-    #btn-add:hover  { background: #006644; }
-    #btn-copy { background: #0052cc; color: #fff; }
-    #btn-copy:hover { background: #0041a3; }
-    #btn-add:disabled, #btn-copy:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .toggle-row { display: flex; gap: 6px; margin-bottom: 14px; }
+    .toggle-btn { padding: 4px 12px; border: 1.5px solid #dde3ea; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; background: #fff; color: #6b7280; transition: all 0.15s; }
+    .toggle-btn.active { background: #0052cc; border-color: #0052cc; color: #fff; }
+
+    button#btn-search { padding: 9px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: #0052cc; color: #fff; white-space: nowrap; }
+    button#btn-search:hover { background: #0041a3; }
+    button#btn-search:disabled { background: #b0c4e8; cursor: not-allowed; }
+
+    /* Rezultātu saraksts (nosaukuma meklēšanai) */
+    .results-list { display: none; border: 1px solid #e0e6ed; border-radius: 10px; overflow: hidden; margin-bottom: 4px; }
+    .result-item { padding: 9px 14px; border-bottom: 1px solid #f0f3f6; cursor: pointer; transition: background 0.1s; }
+    .result-item:last-child { border-bottom: none; }
+    .result-item:hover { background: #eff6ff; }
+    .result-item-name { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+    .result-item-sub  { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+    /* Detaļu karte */
     .result-card { background: #fff; border: 1px solid #e0e6ed; border-radius: 10px; overflow: hidden; display: none; }
-    .result-header { background: #0052cc; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 700; }
+    .result-header { background: #0052cc; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .btn-back { background: rgba(255,255,255,0.2); border: none; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+    .btn-back:hover { background: rgba(255,255,255,0.35); }
     .field-row { display: flex; align-items: flex-start; padding: 9px 14px; border-bottom: 1px solid #f0f3f6; gap: 10px; font-size: 13px; }
     .field-row:last-child { border-bottom: none; }
     .field-label { color: #6b7280; min-width: 110px; font-size: 12px; flex-shrink: 0; padding-top: 1px; }
     .field-value { color: #1a1a2e; font-weight: 500; word-break: break-word; }
     .field-value.missing { color: #9ca3af; font-style: italic; font-weight: 400; }
+
+    .action-row { display: flex; gap: 8px; margin-top: 12px; }
+    .action-row button { flex: 1; padding: 11px; font-size: 13px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: none; }
+    #btn-add  { background: #00875a; color: #fff; }
+    #btn-add:hover  { background: #006644; }
+    #btn-copy { background: #0052cc; color: #fff; }
+    #btn-copy:hover { background: #0041a3; }
+    #btn-add:disabled, #btn-copy:disabled { opacity: 0.5; cursor: not-allowed; }
+
     #error-msg { display: none; background: #fff0f0; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #b91c1c; }
     #loading { display: none; text-align: center; padding: 20px; color: #6b7280; font-size: 13px; }
     .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #e5e7eb; border-top-color: #0052cc; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
@@ -46,14 +65,26 @@
 <div id="auto-hint">🔍 Automātiski atrasts: <span id="hint-nr"></span></div>
 
 <div class="search-row">
-  <input type="text" id="reg-input" placeholder="Reģistrācijas numurs, piem. 44103130848" maxlength="20" />
+  <input type="text" id="reg-input" placeholder="Reģistrācijas numurs…" maxlength="40" />
   <button id="btn-search" onclick="searchCompany()">Meklēt</button>
 </div>
-<div id="loading"><span class="spinner"></span>Meklē uzņēmumu…</div>
+<div class="toggle-row">
+  <button class="toggle-btn active" id="mode-reg"  onclick="setMode('reg')">Reģ. numurs</button>
+  <button class="toggle-btn"        id="mode-name" onclick="setMode('name')">Nosaukums</button>
+</div>
+
+<div id="loading"><span class="spinner"></span>Meklē…</div>
 <div id="error-msg"></div>
 
+<!-- Saraksts nosaukuma meklēšanai -->
+<div class="results-list" id="results-list"></div>
+
+<!-- Detaļu karte -->
 <div class="result-card" id="result-card">
-  <div class="result-header">🏢 <span id="r-name"></span></div>
+  <div class="result-header">
+    <button class="btn-back" id="btn-back" onclick="backToList()" style="display:none">← Atpakaļ</button>
+    <span id="r-name"></span>
+  </div>
   <div class="result-body">
     <div class="field-row"><span class="field-label">📋 Reģ. nr.</span><span class="field-value" id="r-reg"></span></div>
     <div class="field-row"><span class="field-label">📍 Adrese</span><span class="field-value" id="r-addr"></span></div>
@@ -69,37 +100,49 @@
 <script>
   var t = TrelloPowerUp.iframe();
   var currentData = null;
+  var lastResults = [];
+  var searchMode = 'reg'; // 'reg' vai 'name'
   var PROXY = 'https://trello-ur-pull.karlissvampe.workers.dev/';
-
-  // Custom field nosaukums kartītē (precīzi kā Trello)
   var REG_FIELD_NAME = 'Reģistrācijas Nr.';
 
   document.getElementById('reg-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') searchCompany();
   });
 
-  // ── Ielādējoties — mēģina nolasīt reģ. nr. no custom field ──
+  function setMode(mode) {
+    searchMode = mode;
+    document.getElementById('mode-reg').className  = 'toggle-btn' + (mode === 'reg'  ? ' active' : '');
+    document.getElementById('mode-name').className = 'toggle-btn' + (mode === 'name' ? ' active' : '');
+    document.getElementById('reg-input').placeholder = mode === 'reg'
+      ? 'Reģistrācijas numurs…'
+      : 'Uzņēmuma nosaukums…';
+    document.getElementById('reg-input').value = '';
+    hideAll();
+    t.sizeTo(document.body);
+  }
+
+  function hideAll() {
+    hide('result-card'); hide('error-msg'); hide('results-list'); hide('notice');
+    document.getElementById('btn-copy').style.display = 'none';
+    document.getElementById('btn-add').style.display  = 'none';
+    document.getElementById('btn-back').style.display = 'none';
+  }
+
+  // Auto-load reģ. nr. no custom field
   window.addEventListener('load', function() {
     t.card('customFieldItems').then(function(card) {
       var items = card.customFieldItems || [];
       t.board('customFields').then(function(board) {
         var fields = board.customFields || [];
-        // Atrod lauku pēc nosaukuma
-        var regField = fields.find(function(f) {
-          return f.name === REG_FIELD_NAME;
-        });
+        var regField = fields.find(function(f) { return f.name === REG_FIELD_NAME; });
         if (!regField) return;
-        // Atrod vērtību kartītē
-        var item = items.find(function(i) {
-          return i.idCustomField === regField.id;
-        });
+        var item = items.find(function(i) { return i.idCustomField === regField.id; });
         if (!item || !item.value || !item.value.number) return;
         var nr = String(item.value.number);
         document.getElementById('reg-input').value = nr;
         document.getElementById('hint-nr').textContent = nr;
         document.getElementById('auto-hint').style.display = 'block';
         t.sizeTo(document.body);
-        // Automātiski uzsāk meklēšanu
         searchCompany();
       });
     }).catch(function() {});
@@ -114,32 +157,39 @@
   }
   function showNotice(msg, type) {
     var el = document.getElementById('notice');
-    el.textContent = msg;
-    el.className = type;
-    show('notice');
-    t.sizeTo(document.body);
+    el.textContent = msg; el.className = type;
+    show('notice'); t.sizeTo(document.body);
   }
   function buildText(info) {
     return '🏢 Uzņēmuma rekvizīti\n\nNosaukums: ' + info.name + '\nReģ. nr.: ' + info.reg + '\nAdrese: ' + info.addr;
   }
 
   async function searchCompany() {
-    var regNr = document.getElementById('reg-input').value.trim();
-    if (!regNr) return;
-    hide('result-card'); hide('error-msg'); hide('notice');
-    document.getElementById('btn-copy').style.display = 'none';
-    document.getElementById('btn-add').style.display = 'none';
+    var query = document.getElementById('reg-input').value.trim();
+    if (!query) return;
+    hideAll();
     show('loading');
     document.getElementById('btn-search').disabled = true;
+
     try {
-      var resp = await fetch(PROXY + '?reg=' + encodeURIComponent(regNr));
+      var url = searchMode === 'reg'
+        ? PROXY + '?reg='  + encodeURIComponent(query)
+        : PROXY + '?name=' + encodeURIComponent(query);
+
+      var resp = await fetch(url);
       if (!resp.ok) throw new Error('Servera kļūda (' + resp.status + ').');
       var json = await resp.json();
       if (!json.success) throw new Error('API atbildes kļūda.');
       var records = json.result && json.result.records;
-      if (!records || records.length === 0) throw new Error('Uzņēmums nav atrasts. Pārbaudi reģistrācijas numuru.');
-      currentData = { name: records[0].name || '—', reg: String(records[0].regcode || '—'), addr: records[0].address || '—' };
-      displayResult(currentData);
+      if (!records || records.length === 0) throw new Error('Nekas nav atrasts. Mēģini citu meklēšanas vārdu.');
+
+      if (searchMode === 'reg' || records.length === 1) {
+        // Tieši uz detaļu karti
+        showDetail(records[0], false);
+      } else {
+        // Rāda sarakstu
+        showList(records);
+      }
     } catch (err) {
       var msg = (err instanceof TypeError) ? 'Nevar savienoties ar proxy.' : err.message;
       document.getElementById('error-msg').textContent = '❌ ' + msg;
@@ -150,14 +200,41 @@
     }
   }
 
-  function displayResult(info) {
-    document.getElementById('r-name').textContent = info.name;
-    setText('r-reg',  info.reg,  info.reg  === '—');
-    setText('r-addr', info.addr, info.addr === '—');
+  function showList(records) {
+    lastResults = records;
+    var list = document.getElementById('results-list');
+    list.innerHTML = '';
+    records.forEach(function(r, i) {
+      var div = document.createElement('div');
+      div.className = 'result-item';
+      div.innerHTML =
+        '<div class="result-item-name">' + (r.name || '—') + '</div>' +
+        '<div class="result-item-sub">Reģ. nr.: ' + (r.regcode || '—') + ' · ' + (r.address || '—').substring(0, 50) + '</div>';
+      div.onclick = function() { showDetail(r, true); };
+      list.appendChild(div);
+    });
+    show('results-list');
+    t.sizeTo(document.body);
+  }
+
+  function showDetail(r, showBack) {
+    currentData = { name: r.name || '—', reg: String(r.regcode || '—'), addr: r.address || '—' };
+    document.getElementById('r-name').textContent = currentData.name;
+    setText('r-reg',  currentData.reg,  currentData.reg  === '—');
+    setText('r-addr', currentData.addr, currentData.addr === '—');
+    hide('results-list');
     show('result-card');
+    document.getElementById('btn-back').style.display = showBack ? 'block' : 'none';
     show('btn-copy', 'flex');
     show('btn-add',  'flex');
     t.sizeTo(document.body);
+  }
+
+  function backToList() {
+    hide('result-card');
+    document.getElementById('btn-copy').style.display = 'none';
+    document.getElementById('btn-add').style.display  = 'none';
+    showList(lastResults);
   }
 
   function copyToClipboard() {
@@ -176,12 +253,8 @@
     ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
     document.body.appendChild(ta);
     ta.focus(); ta.select();
-    try {
-      document.execCommand('copy');
-      showNotice('✅ Nokopēts starpliktuvē!', 'success');
-    } catch(e) {
-      showNotice('⚠️ Kopēšana neizdevās. Atlasi tekstu manuāli.', 'info');
-    }
+    try { document.execCommand('copy'); showNotice('✅ Nokopēts starpliktuvē!', 'success'); }
+    catch(e) { showNotice('⚠️ Kopēšana neizdevās.', 'info'); }
     document.body.removeChild(ta);
   }
 
