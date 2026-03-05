@@ -7,217 +7,65 @@
   <script src="https://p.trellocdn.com/power-up.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #f8f9fa;
-      color: #1a1a2e;
-      padding: 16px;
-      min-height: 100%;
-    }
-
-    .search-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    input[type="text"] {
-      flex: 1;
-      padding: 9px 13px;
-      border: 2px solid #dde3ea;
-      border-radius: 8px;
-      font-size: 14px;
-      background: #fff;
-      color: #1a1a2e;
-      transition: border-color 0.2s;
-      outline: none;
-    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #1a1a2e; padding: 16px; }
+    .search-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    input[type="text"] { flex: 1; padding: 9px 13px; border: 2px solid #dde3ea; border-radius: 8px; font-size: 14px; background: #fff; color: #1a1a2e; transition: border-color 0.2s; outline: none; }
     input[type="text"]:focus { border-color: #0052cc; }
     input[type="text"]::placeholder { color: #aaa; }
-
-    button {
-      padding: 9px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-    }
-    button:active { transform: scale(0.97); }
-
-    #btn-search {
-      background: #0052cc;
-      color: #fff;
-    }
+    button { padding: 9px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    #btn-search { background: #0052cc; color: #fff; }
     #btn-search:hover { background: #0041a3; }
     #btn-search:disabled { background: #b0c4e8; cursor: not-allowed; }
-
-    #btn-add {
-      width: 100%;
-      margin-top: 12px;
-      padding: 11px;
-      background: #00875a;
-      color: #fff;
-      font-size: 14px;
-      border-radius: 8px;
-    }
+    #btn-add { width: 100%; margin-top: 12px; padding: 11px; background: #00875a; color: #fff; font-size: 14px; border-radius: 8px; display: none; }
     #btn-add:hover { background: #006644; }
     #btn-add:disabled { background: #aac9be; cursor: not-allowed; }
-
-    .result-card {
-      background: #fff;
-      border: 1px solid #e0e6ed;
-      border-radius: 10px;
-      overflow: hidden;
-      display: none;
-    }
-
-    .result-header {
-      background: #0052cc;
-      color: #fff;
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-
-    .result-body { padding: 0; }
-
-    .field-row {
-      display: flex;
-      align-items: flex-start;
-      padding: 9px 14px;
-      border-bottom: 1px solid #f0f3f6;
-      gap: 10px;
-      font-size: 13px;
-    }
+    .result-card { background: #fff; border: 1px solid #e0e6ed; border-radius: 10px; overflow: hidden; display: none; }
+    .result-header { background: #0052cc; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 700; }
+    .field-row { display: flex; align-items: flex-start; padding: 9px 14px; border-bottom: 1px solid #f0f3f6; gap: 10px; font-size: 13px; }
     .field-row:last-child { border-bottom: none; }
-
-    .field-label {
-      color: #6b7280;
-      min-width: 110px;
-      font-size: 12px;
-      padding-top: 1px;
-      flex-shrink: 0;
-    }
-
-    .field-value {
-      color: #1a1a2e;
-      font-weight: 500;
-      word-break: break-word;
-    }
-
+    .field-label { color: #6b7280; min-width: 120px; font-size: 12px; flex-shrink: 0; padding-top: 1px; }
+    .field-value { color: #1a1a2e; font-weight: 500; word-break: break-word; }
     .field-value.missing { color: #9ca3af; font-style: italic; font-weight: 400; }
-
-    .status-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    #error-msg {
-      display: none;
-      background: #fff0f0;
-      border: 1px solid #fca5a5;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #b91c1c;
-    }
-
-    #loading {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      color: #6b7280;
-      font-size: 13px;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 18px; height: 18px;
-      border: 2px solid #e5e7eb;
-      border-top-color: #0052cc;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 6px;
-    }
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-closed { background: #fee2e2; color: #991b1b; }
+    #error-msg { display: none; background: #fff0f0; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #b91c1c; }
+    #loading { display: none; text-align: center; padding: 20px; color: #6b7280; font-size: 13px; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #e5e7eb; border-top-color: #0052cc; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    #success-msg {
-      display: none;
-      background: #f0fdf4;
-      border: 1px solid #6ee7b7;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #065f46;
-      margin-top: 10px;
-    }
+    #success-msg { display: none; background: #f0fdf4; border: 1px solid #6ee7b7; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #065f46; margin-top: 10px; }
   </style>
 </head>
 <body>
-
 <div class="search-row">
-  <input type="text" id="reg-input" placeholder="Reģistrācijas numurs, piem. 40003521ass" maxlength="20" />
+  <input type="text" id="reg-input" placeholder="Reģistrācijas numurs, piem. 44103130848" maxlength="20" />
   <button id="btn-search" onclick="searchCompany()">Meklēt</button>
 </div>
-
 <div id="loading"><span class="spinner"></span>Meklē uzņēmumu…</div>
 <div id="error-msg"></div>
-
 <div class="result-card" id="result-card">
   <div class="result-header">🏢 <span id="r-name"></span></div>
   <div class="result-body">
-    <div class="field-row">
-      <span class="field-label">📋 Reģ. nr.</span>
-      <span class="field-value" id="r-reg"></span>
-    </div>
-    <div class="field-row">
-      <span class="field-label">💼 PVN nr.</span>
-      <span class="field-value" id="r-pvn"></span>
-    </div>
-    <div class="field-row">
-      <span class="field-label">📍 Adrese</span>
-      <span class="field-value" id="r-addr"></span>
-    </div>
-    <div class="field-row">
-      <span class="field-label">🏦 Bankas konts</span>
-      <span class="field-value" id="r-bank"></span>
-    </div>
-    <div class="field-row">
-      <span class="field-label">✅ Statuss</span>
-      <span class="field-value"><span class="status-badge" id="r-status"></span></span>
-    </div>
+    <div class="field-row"><span class="field-label">📋 Reģ. nr.</span><span class="field-value" id="r-reg"></span></div>
+    <div class="field-row"><span class="field-label">🏢 Veids</span><span class="field-value" id="r-type"></span></div>
+    <div class="field-row"><span class="field-label">📍 Jur. adrese</span><span class="field-value" id="r-addr"></span></div>
+    <div class="field-row"><span class="field-label">🏦 SEPA id</span><span class="field-value" id="r-sepa"></span></div>
+    <div class="field-row"><span class="field-label">📅 Reģistrēts</span><span class="field-value" id="r-registered"></span></div>
+    <div class="field-row"><span class="field-label">✅ Statuss</span><span class="field-value"><span class="status-badge" id="r-status"></span></span></div>
   </div>
 </div>
-
 <div id="success-msg">✅ Rekvizīti pievienoti kartītei kā komentārs!</div>
-
-<button id="btn-add" style="display:none" onclick="addToCard()">
-  ➕ Pievienot Trello kartītei
-</button>
-
+<button id="btn-add" onclick="addToCard()">➕ Pievienot Trello kartītei</button>
 <script>
   var t = TrelloPowerUp.iframe();
   var currentData = null;
+  var PROXY = 'https://trello-ur-pull.karlissvampe.workers.dev/';
 
-  // Allow Enter key in input
   document.getElementById('reg-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') searchCompany();
   });
 
-  function show(id, display) {
-    document.getElementById(id).style.display = display || 'block';
-  }
+  function show(id, d) { document.getElementById(id).style.display = d || 'block'; }
   function hide(id) { document.getElementById(id).style.display = 'none'; }
   function setText(id, text, missing) {
     var el = document.getElementById(id);
@@ -228,31 +76,20 @@
   async function searchCompany() {
     var regNr = document.getElementById('reg-input').value.trim();
     if (!regNr) return;
-
-    hide('result-card');
-    hide('error-msg');
-    hide('btn-add');
-    hide('success-msg');
+    hide('result-card'); hide('error-msg'); hide('btn-add'); hide('success-msg');
     show('loading');
     document.getElementById('btn-search').disabled = true;
-
     try {
-      // Cloudflare proxy → UR API (CORS risinājums)
-      var url = 'https://trello-ur-pull.karlissvampe.workers.dev/?reg=' + encodeURIComponent(regNr);
-      var resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
-
-      if (resp.status === 404) throw new Error('Uzņēmums nav atrasts. Pārbaudi reģistrācijas numuru.');
-      if (!resp.ok) throw new Error('Servera kļūda (' + resp.status + '). Mēģini vēlāk.');
-
-      var data = await resp.json();
-      currentData = parseCompany(data);
+      var resp = await fetch(PROXY + '?reg=' + encodeURIComponent(regNr));
+      if (!resp.ok) throw new Error('Servera kļūda (' + resp.status + ').');
+      var json = await resp.json();
+      if (!json.success) throw new Error('API atbildes kļūda.');
+      var records = json.result && json.result.records;
+      if (!records || records.length === 0) throw new Error('Uzņēmums nav atrasts. Pārbaudi reģistrācijas numuru.');
+      currentData = parseCompany(records[0]);
       displayResult(currentData);
-
     } catch (err) {
-      var msg = err.message;
-      if (err instanceof TypeError) {
-        msg = 'Nevar savienoties ar proxy. Pārbaudi vai workers.dev ir aktīvs.';
-      }
+      var msg = (err instanceof TypeError) ? 'Nevar savienoties ar proxy. Pārbaudi vai workers.dev ir aktīvs.' : err.message;
       document.getElementById('error-msg').textContent = '❌ ' + msg;
       show('error-msg');
     } finally {
@@ -262,29 +99,28 @@
   }
 
   function parseCompany(d) {
-    var bank = '—';
-    var accounts = d.bankAccounts || d.accounts || [];
-    if (accounts.length > 0) {
-      var a = accounts[0];
-      bank = (a.iban || a.account || '') + (a.bankName ? ' (' + a.bankName + ')' : '');
-    }
+    var closed = d.terminated || d.closed === 'TRUE';
     return {
-      name:   d.name || '—',
-      reg:    d.regNr || d.registrationNumber || '—',
-      pvn:    d.pvnNr || d.vatNr || d.vatNumber || 'Nav reģistrēts',
-      addr:   (d.legalAddress && d.legalAddress.fullAddress) || d.address || '—',
-      bank:   bank,
-      status: d.status || d.statusName || '—'
+      name:       d.name || '—',
+      reg:        String(d.regcode || '—'),
+      type:       d.type_text || d.regtype_text || '—',
+      addr:       d.address || '—',
+      sepa:       d.sepa || null,
+      registered: d.registered ? d.registered.split('T')[0] : '—',
+      active:     !closed
     };
   }
 
   function displayResult(info) {
     document.getElementById('r-name').textContent = info.name;
-    setText('r-reg',    info.reg);
-    setText('r-pvn',    info.pvn,    info.pvn === 'Nav reģistrēts');
-    setText('r-addr',   info.addr,   info.addr === '—');
-    setText('r-bank',   info.bank,   info.bank === '—');
-    document.getElementById('r-status').textContent = info.status;
+    setText('r-reg',        info.reg);
+    setText('r-type',       info.type);
+    setText('r-addr',       info.addr, info.addr === '—');
+    setText('r-sepa',       info.sepa || 'Nav norādīts', !info.sepa);
+    setText('r-registered', info.registered);
+    var badge = document.getElementById('r-status');
+    badge.textContent = info.active ? 'Aktīvs' : 'Likvidēts';
+    badge.className = 'status-badge ' + (info.active ? 'status-active' : 'status-closed');
     show('result-card');
     show('btn-add', 'block');
     t.sizeTo(document.body);
@@ -293,40 +129,31 @@
   async function addToCard() {
     if (!currentData) return;
     document.getElementById('btn-add').disabled = true;
-
     var comment =
       '🏢 *Uzņēmuma rekvizīti*\n\n' +
-      '📋 Nosaukums: ' + currentData.name + '\n' +
-      '📋 Reģ. nr.: '  + currentData.reg  + '\n' +
-      '💼 PVN nr.: '   + currentData.pvn  + '\n' +
-      '📍 Adrese: '    + currentData.addr + '\n' +
-      '🏦 Bankas konts: ' + currentData.bank;
-
+      '📋 Nosaukums: '  + currentData.name + '\n' +
+      '📋 Reģ. nr.: '   + currentData.reg  + '\n' +
+      '🏢 Veids: '      + currentData.type + '\n' +
+      '📍 Adrese: '     + currentData.addr + '\n' +
+      '🏦 SEPA id: '    + (currentData.sepa || 'Nav norādīts') + '\n' +
+      '📅 Reģistrēts: ' + currentData.registered + '\n' +
+      '✅ Statuss: '    + (currentData.active ? 'Aktīvs' : 'Likvidēts');
     try {
-      await t.card('id').then(function(card) {
-        return t.set('card', 'shared', 'ur_rekviziti', comment);
-      });
-
-      // Post as comment via REST — requires user token via t.getRestApi()
       var restApi = t.getRestApi();
       var token = await restApi.getToken({ scope: { write: true } });
-      var cardId = (await t.card('id')).id;
-
-      await fetch('https://api.trello.com/1/cards/' + cardId + '/actions/comments', {
+      var card = await t.card('id');
+      var fetchResp = await fetch('https://api.trello.com/1/cards/' + card.id + '/actions/comments?key=&token=' + token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: comment, token: token, key: '' })
+        body: JSON.stringify({ text: comment })
       });
-
+      if (!fetchResp.ok) throw new Error('Trello API kļūda');
       hide('btn-add');
       show('success-msg');
       t.sizeTo(document.body);
-
     } catch (err) {
-      // Fallback — copy to clipboard
-      navigator.clipboard.writeText(comment).then(function() {
-        alert('✅ Rekvizīti nokopēti starpliktuvē! Ielīmē kartītes komentārā manuāli.');
-      });
+      navigator.clipboard.writeText(comment).catch(function(){});
+      alert('✅ Rekvizīti nokopēti starpliktuvē!\nIelīmē kartītes komentārā manuāli (Ctrl+V).');
       document.getElementById('btn-add').disabled = false;
     }
   }
