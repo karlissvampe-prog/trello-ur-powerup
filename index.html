@@ -11,7 +11,33 @@
 
   TrelloPowerUp.initialize({
 
-    // Sekcija kartītes iekšpusē (vienmēr redzama)
+    'card-buttons': function(t) {
+      return [
+        {
+          icon: BASE_URL + 'icon.svg',
+          text: 'Rekvizīti',
+          callback: function(t) {
+            return t.popup({
+              title: '🏢 Uzņēmuma Rekvizīti',
+              url: BASE_URL + 'popup.html',
+              height: 380
+            });
+          }
+        },
+        {
+          icon: BASE_URL + 'icon-route.svg',
+          text: 'Maršruta lapa',
+          callback: function(t) {
+            return t.popup({
+              title: '📄 Maršruta Lapa',
+              url: BASE_URL + 'marsruts.html',
+              height: 420
+            });
+          }
+        }
+      ];
+    },
+
     'card-back-section': function(t) {
       return {
         title: '🏢 Uzņēmuma Rekvizīti',
@@ -22,21 +48,6 @@
           height: 120
         }
       };
-    },
-
-    // Poga kartītes augšā (Standard plānam)
-    'card-buttons': function(t) {
-      return [{
-        icon: BASE_URL + 'icon.svg',
-        text: 'Rekvizīti',
-        callback: function(t) {
-          return t.popup({
-            title: '🏢 Uzņēmuma Rekvizīti',
-            url: BASE_URL + 'popup.html',
-            height: 380
-          });
-        }
-      }];
     }
 
   });
