@@ -8,30 +8,23 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f8f9fa; color: #1a1a2e; padding: 16px; }
-
     #loading { text-align: center; padding: 30px; color: #6b7280; font-size: 13px; }
     .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #e5e7eb; border-top-color: #0052cc; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .sheet { display: none; background: #fff; border: 1px solid #e0e6ed; border-radius: 12px; overflow: hidden; }
-
     .sheet-header { background: #0052cc; color: #fff; padding: 12px 16px; }
     .sheet-title { font-size: 15px; font-weight: 700; }
     .sheet-subtitle { font-size: 11px; opacity: 0.75; margin-top: 2px; }
-
     .field-row { display: flex; align-items: flex-start; padding: 9px 16px; border-bottom: 1px solid #f0f3f6; gap: 10px; font-size: 13px; }
     .field-row:last-child { border-bottom: none; }
-    .field-label { color: #6b7280; min-width: 120px; font-size: 12px; flex-shrink: 0; padding-top: 1px; }
+    .field-label { color: #6b7280; min-width: 130px; font-size: 12px; flex-shrink: 0; padding-top: 1px; }
     .field-value { color: #1a1a2e; font-weight: 600; word-break: break-word; }
     .field-value.missing { color: #9ca3af; font-weight: 400; font-style: italic; }
-
-    .divider { height: 1px; background: #e0e6ed; margin: 0; }
-
-    #btn-copy { width: 100%; margin-top: 12px; padding: 12px; background: #0052cc; color: #fff; font-size: 14px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; letter-spacing: 0.01em; }
+    .field-value.notes { font-weight: 400; white-space: pre-wrap; line-height: 1.5; }
+    .divider { height: 4px; background: #f0f3f6; }
+    #btn-copy { width: 100%; margin-top: 12px; padding: 12px; background: #0052cc; color: #fff; font-size: 14px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer; }
     #btn-copy:hover { background: #0041a3; }
-
-    #notice { display: none; margin-top: 10px; border-radius: 8px; padding: 10px 14px; font-size: 13px; text-align: center; }
-    #notice.success { background: #f0fdf4; border: 1px solid #6ee7b7; color: #065f46; }
+    #notice { display: none; margin-top: 10px; border-radius: 8px; padding: 10px 14px; font-size: 13px; text-align: center; background: #f0fdf4; border: 1px solid #6ee7b7; color: #065f46; }
   </style>
 </head>
 <body>
@@ -56,24 +49,20 @@
     <span class="field-label">🏁 Galamērķis</span>
     <span class="field-value" id="f-to"></span>
   </div>
+
   <div class="divider"></div>
+
   <div class="field-row">
     <span class="field-label">🚌 Autobuss</span>
     <span class="field-value" id="f-bus"></span>
   </div>
   <div class="field-row">
-    <span class="field-label">👤 Šoferis</span>
-    <span class="field-value" id="f-driver"></span>
-  </div>
-  <div class="divider"></div>
-  <div class="field-row">
     <span class="field-label">👥 Pasažieri</span>
     <span class="field-value" id="f-pax"></span>
   </div>
-  <div class="field-row">
-    <span class="field-label">💶 Cena ar PVN</span>
-    <span class="field-value" id="f-price"></span>
-  </div>
+
+  <div class="divider"></div>
+
   <div class="field-row">
     <span class="field-label">📞 Kontaktpersona</span>
     <span class="field-value" id="f-phone"></span>
@@ -81,6 +70,13 @@
   <div class="field-row">
     <span class="field-label">🏢 Klients</span>
     <span class="field-value" id="f-client"></span>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field-row">
+    <span class="field-label">📝 Papildus info</span>
+    <span class="field-value notes" id="f-notes"></span>
   </div>
 </div>
 
@@ -91,121 +87,123 @@
   var t = TrelloPowerUp.iframe();
   var sheetText = '';
 
-  // Lauku nosaukumi — jāsakrīt precīzi ar Trello custom field nosaukumiem
   var FIELD_MAP = {
     bus:    'Autobuss',
     pax:    'Pasažieru skaits',
     phone:  'Telefons',
-    price:  'Cena ar PVN',
     start:  'Brauciena sākums',
-    driver: 'Šoferis',
     client: 'Klients'
   };
 
   function show(id, d) { document.getElementById(id).style.display = d || 'block'; }
   function hide(id)    { document.getElementById(id).style.display = 'none'; }
 
-  function setField(id, value) {
+  function setField(id, value, isNotes) {
     var el = document.getElementById(id);
     if (value) {
       el.textContent = value;
-      el.className = 'field-value';
+      el.className = 'field-value' + (isNotes ? ' notes' : '');
     } else {
       el.textContent = 'Nav norādīts';
       el.className = 'field-value missing';
     }
   }
 
-  // Izvelk adreses no description teksta
   function parseDescription(desc) {
-    var from = '', to = '';
-    if (!desc) return { from: from, to: to };
+    var result = { from: '', to: '', notes: '' };
+    if (!desc) return result;
     var lines = desc.split('\n');
+    var notesLines = [];
+    var noteMode = false;
+
     lines.forEach(function(line) {
       var l = line.trim();
-      if (/adrese\s*(sākums|izbraukšana|no)/i.test(l)) {
-        from = l.replace(/^[^:]+:\s*/i, '').trim();
-      } else if (/adrese\s*(beigas|galamērķis|uz)/i.test(l)) {
-        to = l.replace(/^[^:]+:\s*/i, '').trim();
+      if (!l) return;
+
+      if (/adrese\s*(sākums|s[aā]kums|izbraukšana|no)\s*:/i.test(l)) {
+        result.from = l.replace(/^[^:]+:\s*/i, '').trim();
+      } else if (/adrese\s*(beigas|galamērķis|uz)\s*:/i.test(l)) {
+        result.to = l.replace(/^[^:]+:\s*/i, '').trim();
       } else if (/^izbraukšana\s*:/i.test(l)) {
-        from = l.replace(/^[^:]+:\s*/i, '').trim();
+        result.from = l.replace(/^[^:]+:\s*/i, '').trim();
+      } else if (/papildus\s*(informācija|info)\s*:/i.test(l)) {
+        var val = l.replace(/^[^:]+:\s*/i, '').trim();
+        if (val) notesLines.push(val);
+        noteMode = true;
+      } else if (noteMode) {
+        notesLines.push(l);
       }
     });
-    return { from: from, to: to };
+
+    result.notes = notesLines.join('\n').trim();
+    return result;
   }
 
   function formatDate(val) {
     if (!val) return null;
-    // val var būt ISO string vai timestamp
     var d = new Date(val);
     if (isNaN(d)) return val;
-    var dd = String(d.getDate()).padStart(2,'0');
-    var mm = String(d.getMonth()+1).padStart(2,'0');
+    var dd   = String(d.getDate()).padStart(2,'0');
+    var mm   = String(d.getMonth()+1).padStart(2,'0');
     var yyyy = d.getFullYear();
-    var hh = String(d.getHours()).padStart(2,'0');
-    var min = String(d.getMinutes()).padStart(2,'0');
+    var hh   = String(d.getHours()).padStart(2,'0');
+    var min  = String(d.getMinutes()).padStart(2,'0');
     return dd + '.' + mm + '.' + yyyy + ' ' + hh + ':' + min;
   }
 
   window.addEventListener('load', async function() {
     try {
-      var card   = await t.card('name', 'desc', 'customFieldItems', 'due');
-      var board  = await t.board('customFields');
+      var card  = await t.card('name', 'desc', 'customFieldItems', 'due');
+      var board = await t.board('customFields');
       var fields = board.customFields || [];
       var items  = card.customFieldItems || [];
 
-      // Mapē field nosaukumu → vērtību
       var vals = {};
       fields.forEach(function(f) {
         var item = items.find(function(i) { return i.idCustomField === f.id; });
         if (!item) return;
         var v = item.value;
         if (!v) {
-          // dropdown (list) vērtība
           if (item.idValue) {
             var opt = (f.options || []).find(function(o) { return o.id === item.idValue; });
-            if (opt) vals[f.name] = opt.value && opt.value.text ? opt.value.text : '';
+            if (opt && opt.value && opt.value.text) vals[f.name] = opt.value.text;
           }
           return;
         }
-        if (v.text  !== undefined) vals[f.name] = v.text;
-        if (v.number!== undefined) vals[f.name] = String(v.number);
-        if (v.date  !== undefined) vals[f.name] = formatDate(v.date);
-        if (v.checked !== undefined) vals[f.name] = v.checked ? 'Jā' : 'Nē';
+        if (v.text     !== undefined) vals[f.name] = v.text;
+        if (v.number   !== undefined) vals[f.name] = String(v.number);
+        if (v.date     !== undefined) vals[f.name] = formatDate(v.date);
+        if (v.checked  !== undefined) vals[f.name] = v.checked ? 'Jā' : 'Nē';
       });
 
-      // Izvelk adreses no description
       var addr = parseDescription(card.desc);
 
-      // Aizpilda UI
       document.getElementById('sheet-cardname').textContent = card.name;
 
-      setField('f-start',  vals[FIELD_MAP.start]  || (card.due ? formatDate(card.due) : null));
-      setField('f-from',   addr.from || null);
-      setField('f-to',     addr.to   || null);
-      setField('f-bus',    vals[FIELD_MAP.bus]     || null);
-      setField('f-driver', vals[FIELD_MAP.driver]  || null);
-      setField('f-pax',    vals[FIELD_MAP.pax]     || null);
-      setField('f-price',  vals[FIELD_MAP.price] ? '€' + vals[FIELD_MAP.price] : null);
-      setField('f-phone',  vals[FIELD_MAP.phone]   || null);
-      setField('f-client', vals[FIELD_MAP.client]  || null);
+      var startVal = vals[FIELD_MAP.start] || (card.due ? formatDate(card.due) : null);
+      setField('f-start',  startVal);
+      setField('f-from',   addr.from  || null);
+      setField('f-to',     addr.to    || null);
+      setField('f-bus',    vals[FIELD_MAP.bus]    || null);
+      setField('f-pax',    vals[FIELD_MAP.pax]    || null);
+      setField('f-phone',  vals[FIELD_MAP.phone]  || null);
+      setField('f-client', vals[FIELD_MAP.client] || null);
+      setField('f-notes',  addr.notes || null, true);
 
-      // Sagatavo kopēšanas tekstu
       sheetText =
         '📄 MARŠRUTA LAPA\n' +
         card.name + '\n' +
         '─────────────────────\n' +
-        '📅 Brauciena sākums: ' + (vals[FIELD_MAP.start] || (card.due ? formatDate(card.due) : 'Nav norādīts')) + '\n' +
-        '📍 Izbraukšana: '      + (addr.from || 'Nav norādīts') + '\n' +
-        '🏁 Galamērķis: '       + (addr.to   || 'Nav norādīts') + '\n' +
+        '📅 Brauciena sākums: ' + (startVal          || 'Nav norādīts') + '\n' +
+        '📍 Izbraukšana: '      + (addr.from         || 'Nav norādīts') + '\n' +
+        '🏁 Galamērķis: '       + (addr.to           || 'Nav norādīts') + '\n' +
         '─────────────────────\n' +
         '🚌 Autobuss: '         + (vals[FIELD_MAP.bus]    || 'Nav norādīts') + '\n' +
-        '👤 Šoferis: '          + (vals[FIELD_MAP.driver] || 'Nav norādīts') + '\n' +
+        '👥 Pasažieri: '        + (vals[FIELD_MAP.pax]    || 'Nav norādīts') + '\n' +
         '─────────────────────\n' +
-        '👥 Pasažieri: '        + (vals[FIELD_MAP.pax]   || 'Nav norādīts') + '\n' +
-        '💶 Cena ar PVN: '      + (vals[FIELD_MAP.price] ? '€' + vals[FIELD_MAP.price] : 'Nav norādīts') + '\n' +
-        '📞 Kontaktpersona: '   + (vals[FIELD_MAP.phone] || 'Nav norādīts') + '\n' +
-        '🏢 Klients: '          + (vals[FIELD_MAP.client]|| 'Nav norādīts');
+        '📞 Kontaktpersona: '   + (vals[FIELD_MAP.phone]  || 'Nav norādīts') + '\n' +
+        '🏢 Klients: '          + (vals[FIELD_MAP.client] || 'Nav norādīts') + '\n' +
+        (addr.notes ? '─────────────────────\n📝 Papildus info: ' + addr.notes : '');
 
       hide('loading');
       show('sheet');
@@ -222,8 +220,8 @@
     if (!sheetText) return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(sheetText)
-        .then(function() { showNotice(); })
-        .catch(function() { fallback(); });
+        .then(showNotice)
+        .catch(fallback);
     } else { fallback(); }
   }
 
@@ -234,14 +232,12 @@
     document.body.appendChild(ta);
     ta.focus(); ta.select();
     try { document.execCommand('copy'); showNotice(); }
-    catch(e) { alert('Kopēšana neizdevās — atlasi tekstu manuāli.'); }
+    catch(e) { alert('Kopēšana neizdevās.'); }
     document.body.removeChild(ta);
   }
 
   function showNotice() {
-    var el = document.getElementById('notice');
-    el.textContent = '✅ Maršruta lapa nokopēta starpliktuvē!';
-    el.className = 'success';
+    document.getElementById('notice').textContent = '✅ Maršruta lapa nokopēta starpliktuvē!';
     show('notice');
     t.sizeTo(document.body);
   }
